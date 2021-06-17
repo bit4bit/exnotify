@@ -6,7 +6,7 @@ defmodule Exnotify.MixProject do
       app: :exnotify,
       version: "0.1.0",
       elixir: "~> 1.12",
-      compilers: [:unifex, :bundlex] ++ Mix.compilers,
+      compilers: [:unifex, :bundlex] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]

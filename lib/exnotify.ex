@@ -24,9 +24,11 @@ defmodule Exnotify do
           :ok ->
             Process.flag(:trap_exit, true)
             {:ok, %Exnotify{cnode: cnode, watcher: watcher}}
+
           _ ->
             {:stop, :cnode}
         end
+
       _ ->
         {:stop, :cnode}
     end
@@ -38,6 +40,7 @@ defmodule Exnotify do
         watch_descriptors = Map.put(state.watch_descriptors, pathname, wd)
 
         {:reply, :ok, %{state | watch_descriptors: watch_descriptors}}
+
       {:error, errno} ->
         {:reply, {:error, errno}, state}
     end
@@ -47,6 +50,7 @@ defmodule Exnotify do
     send(state.watcher, event)
     {:noreply, state}
   end
+
   def handle_info({:EXIT, _from, _reason}, state) do
     {:stop, :cnode, state}
   end
@@ -66,6 +70,7 @@ defmodule Exnotify do
   defp call(cnode, fun, args \\ []) when is_list(args) do
     apply(Unifex.CNode, :call, [cnode, fun, args])
   end
+
   defp errno_to_atom(_errno) do
     :einval
   end
