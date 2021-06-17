@@ -28,7 +28,7 @@ defmodule Exnotify do
 
   """
   @spec add_watch(
-          name :: GenServer.t(),
+          name :: GenServer.name(),
           pathname :: String.t(),
           events :: [
             :notify_in_access

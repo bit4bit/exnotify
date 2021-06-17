@@ -39,7 +39,7 @@ defmodule Exnotify.MixProject do
     [
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/bit4bit/exnotify"},
-      files: ~w(lib c_src mix.exs README.md LICENSE)
+      files: ~w(lib c_src bundlex.exs mix.exs README.md LICENSE)
     ]
   end
 end
