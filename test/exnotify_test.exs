@@ -64,6 +64,6 @@ defmodule ExnotifyTest do
     |> DateTime.to_unix(:microsecond)
     |> to_string()
     |> then(&"#{&1}.exnotify.test")
-    |> then(&(Path.join(dir, &1)))
+    |> then(&Path.join(dir, &1))
   end
 end
