@@ -2,6 +2,7 @@
 #include <string.h>
 #include <poll.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "inotify.h"
 
@@ -20,11 +21,18 @@ void mask_to_events(unsigned int mask, Events* events, unsigned int *events_leng
 
 UNIFEX_TERM init(UnifexEnv *env) {
   int fd = inotify_init1(IN_NONBLOCK);
-  State *state = unifex_alloc_state(env);
-  state->inotify_fd = fd;
+  State *state = NULL;
 
-  if (fd == -1)
+  if (fd == -1) {
     return init_result_error(env, strerror(errno));
+  }
+
+  state = unifex_alloc_state(env);
+  if (state == NULL) {
+    return init_result_error(env, strerror(errno));
+  }
+
+  state->inotify_fd = fd;
 
   UNIFEX_TERM res = init_result_ok(env, state);
   unifex_release_state(env, state);
@@ -63,6 +71,8 @@ int handle_events(UnifexEnv *env, int fd) {
   char buf[4096];
   const struct inotify_event *event;
   ssize_t len;
+  Events myevents[32];
+  unsigned int myevents_length = 0;
 
   if (env->state == NULL)
     return 0;
@@ -79,13 +89,11 @@ int handle_events(UnifexEnv *env, int fd) {
 
     for (char *ptr = buf; ptr < buf + len;
          ptr += sizeof(struct inotify_event) + event->len) {
-      Events myevents[10];
-      unsigned int myevents_length = 0;
       event = (const struct inotify_event *) ptr;
 
       mask_to_events(event->mask, myevents, &myevents_length);
 
-      send_inotify_event(env, *env->reply_to, 0, event->wd, event->name, myevents, 1);
+      send_inotify_event(env, *env->reply_to, 0, event->wd, event->name, myevents, myevents_length);
     }
   }
 
@@ -95,8 +103,8 @@ int handle_events(UnifexEnv *env, int fd) {
 int handle_main(int argc, char **argv) {
   UnifexEnv env;
   int poll_num;
-  nfds_t nfds = 3;
-  struct pollfd fds[3];
+  nfds_t nfds = 2;
+  struct pollfd fds[2];
   int done = 0;
 
   if (unifex_cnode_init(argc, argv, &env)) {
@@ -113,9 +121,6 @@ int handle_main(int argc, char **argv) {
 
       fds[1].fd = env.ei_socket_fd;
       fds[1].events = POLLIN;
-
-      fds[2].fd = env.listen_fd;
-      fds[2].events = POLLIN;
 
       poll_num = poll(fds, nfds, -1);
 
@@ -135,20 +140,13 @@ int handle_main(int argc, char **argv) {
         if (fds[1].revents & POLLIN) {
           done = unifex_cnode_receive(&env);
         }
-
-        if (fds[2].revents & POLLIN) {
-          done = unifex_cnode_receive(&env);
-        }
       }
     }
   }
 
-
   unifex_cnode_destroy(&env);
   return 0;
 }
-
-
 
 void handle_destroy_state(UnifexEnv *env, State *state) {
   UNIFEX_UNUSED(env);
