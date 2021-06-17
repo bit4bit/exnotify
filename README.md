@@ -1,6 +1,6 @@
 # Exnotify
 
-**TODO: Add description**
+**Implementation of inotify using Unifex (Only linux)**
 
 ## Installation
 
